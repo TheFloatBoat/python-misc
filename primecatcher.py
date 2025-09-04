@@ -1,68 +1,110 @@
 import math
 import time
-file_path = "primes.txt"
-# Step 1: Read the contents of the file
-file_path = "primes.txt"
-with open(file_path, "r") as file:
-    data = file.read()
+import sys
 
-# Step 2: Split the string by commas and filter out any empty strings
-numbers_str = data.split(",")
-numbers_str = [num for num in numbers_str if num]
+def numFromFile():
+  with open('factors.txt', 'r') as file:
+    content = file.read()
+  content = content.replace('[', '').replace(']', '').replace(' ', '')
+  elements = content.split(',')
+  result_list = [int(element) for element in elements]
+  return result_list
 
-# Step 3: Convert elements to integers and store them in a Python list
-primes_list = [int(number) for number in numbers_str]
-def progress_bar(x, pvt):
-    progress = x - 1
-    total = math.floor(math.sqrt(pvt)) - 1
-    percentage = math.floor((progress / total) * 100)
-
-    # Define the length of the progress bar
-    bar_length = 40
-    num_hashes = int(bar_length * progress / total)
-    num_spaces = bar_length - num_hashes
-
-    # Create the progress bar
-    bar = "#" * num_hashes + " " * num_spaces
-
-    # Print the progress bar and percentage
-    print(f"We're currently testing {progress}/{total}. {percentage}% of the way there! [{bar}]", end='\r')
-
-def getnum():
-  pvt = input("what's the number you want? ")
-  if pvt == "op":
+def getNum():
+  a=input("What number do we factorise?")
+  if a == "OP":
     findPrimes()
+  if a == "quit":
+    print("oof")
+    sys.exit()
   try:
-    pvt = int(pvt)
-  except ValueError:
-    print("um make it a whole number please")
-    getnum()
-  return pvt
-    
-
-def factorise():
-  sum = 1
-  pvt = getnum()
-  pvto = pvt
-  #primef is where primes are stored
-  primef = [1]
-  #runs until highest factor possible
-  x=2
-  while True:
-    progress_bar(x,pvt)
-    #code to see if it is a factor
-    while pvt % x == 0:
-      primef.append(x)
-      pvt = pvt/x
-    #x gets bigger than the max possible number
-    if x >= (math.floor(math.sqrt(pvt))) or x >= (math.floor(math.sqrt(pvto))):
-      #double check
-      for y in range(0, len(primef)):
-        sum = sum * primef[y]
-      if not(sum == pvto):
-        primef.append(int(pvto/sum))
-      print(f"The search is over! Prime factors are {primef}")
+    int(a)
+  except:
+    print("that's wrong, somehow.")
+    a = getNum()
+  if int(a) == 0:
+    print("You can't use 0")
+    a=int(getNum())
+  return int(a)
+  
+def factorise(num, updates):
+  numForCalc = num
+  factors = [1]
+  switch = False
+  atSwitch = 0
+  for x in range(0,len(primes)+1):
+    try:
+      primes[x]
+    except IndexError:
+      print("Precalculated primes have been exceded. Switching to unoptimised mode.")
+      print(f"BTW this is what we have left to factorise:{numForCalc}")
+      switch = True
+      atSwitch = x-1
       break
+    if primes[x] > math.sqrt(numForCalc) or numForCalc == 1:
+      break
+    while numForCalc % primes[x] == 0:
+      factors.append(primes[x])
+      numForCalc /= primes[x]
+      if updates.lower() == "yes":
+        print(f"Factors found so far:{factors}")
+  if switch == True:
+    factors = unopFactoriser(atSwitch, numForCalc, factors)
+  factors = doubleCheck(num, factors)
+  return factors
+
+def unopFactoriser(startCheck, target, factors):
+  numToCheck = target
+  for x in range(primes[startCheck], int(math.floor(math.sqrt(target))+1)):
+    if numToCheck % x == 0:
+      factors.append(x)
+      numToCheck /= x
+    if numToCheck == 1:
+      break
+  return factors
+      
+
+def doubleCheck(target, factors):
+  multOfFactors = 1
+  for x in range(0, len(factors)):
+    multOfFactors *= factors[x]
+  if multOfFactors < target:
+    factors.append(int(target/multOfFactors))
+  elif multOfFactors > target:
+    factors.append(int(multOfFactors/target))
+  return factors
+
+def findPrimes():
+  primesList = numFromFile()
+  currentNum = primesList[len(primesList)-1]+1
+  found = 0
+  while True:
+    isPrime = True
+    for x in range(2, math.floor(math.sqrt(currentNum+1))+1):
+      if currentNum % x == 0:
+        isPrime = False
+        break
+    if isPrime:
+      primesList.append(currentNum)
+    currentNum += 1
+    found +=1
+    if found == 100000:
+      with open('factors.txt', 'w') as file:
+        file.write("[")
+        for prime in primesList:
+          file.write(str(prime) + ", ")
+        file.write("]")
+      quit = input("It has been 100000 numbers. Do you want to stop?")
+      if quit.lower() == "yes":
+        break
+      else:
+        print("I'm assuming no")
+        found = 0
+primes = numFromFile()
+
 
 while True:
-  factorise()
+  toFactorise = getNum()
+  updates = input("Do you want updates on progress? type yes if you want and anything else if you dont:")
+  factors = factorise(toFactorise, updates)
+  print(f"The factors of your number are {factors}")
