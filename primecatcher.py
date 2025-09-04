@@ -10,59 +10,51 @@ def numFromFile():
   result_list = [int(element) for element in elements]
   return result_list
 
-def getNum():
+def getNumToFac():
   a=input("What number do we factorise?")
   if a == "OP":
     findPrimes()
-  if a == "quit":
+  elif a == "quit":
     print("oof")
     sys.exit()
+  elif a == 0:
+    print("You cannot factorise 0")
   try:
     int(a)
   except:
     print("that's wrong, somehow.")
-    a = getNum()
-  if int(a) == 0:
-    print("You can't use 0")
-    a=int(getNum())
+    a = getNumToFac()
   return int(a)
-  
+
 def factorise(num, updates):
-  numForCalc = num
+  numToFac = num
   factors = [1]
-  switch = False
-  atSwitch = 0
-  for x in range(0,len(primes)+1):
-    try:
-      primes[x]
-    except IndexError:
-      print("Precalculated primes have been exceded. Switching to unoptimised mode.")
-      print(f"BTW this is what we have left to factorise:{numForCalc}")
-      switch = True
-      atSwitch = x-1
-      break
-    if primes[x] > math.sqrt(numForCalc) or numForCalc == 1:
-      break
-    while numForCalc % primes[x] == 0:
-      factors.append(primes[x])
-      numForCalc /= primes[x]
+  numsChecked = 0
+  x = 0
+  for x in primes:
+    while x <= math.sqrt(numToFac) and numToFac % x == 0:
+      factors.append(x)
+      numToFac /= x
       if updates.lower() == "yes":
         print(f"Factors found so far:{factors}")
-  if switch == True:
-    factors = unopFactoriser(atSwitch, numForCalc, factors)
+  if numToFac != 1:
+    print("Precalculated primes have been exceded. Switching to unoptimised mode.")
+    numsChecked = x-1
+    factors = unopFactoriser(numsChecked, numToFac, factors)
   factors = doubleCheck(num, factors)
   return factors
-
+ 
 def unopFactoriser(startCheck, target, factors):
   numToCheck = target
-  for x in range(primes[startCheck], int(math.floor(math.sqrt(target))+1)):
-    if numToCheck % x == 0:
+  for x in range(startCheck, int(math.floor(math.sqrt(target))+1)):
+    while numToCheck % x == 0:
       factors.append(x)
+      print(factors)
       numToCheck /= x
     if numToCheck == 1:
       break
   return factors
-      
+
 
 def doubleCheck(target, factors):
   multOfFactors = 1
@@ -92,7 +84,7 @@ def findPrimes():
       with open('factors.txt', 'w') as file:
         file.write("[")
         for prime in primesList:
-          file.write(str(prime) + ", ")
+          file.write(", " + str(prime))
         file.write("]")
       quit = input("It has been 100000 numbers. Do you want to stop?")
       if quit.lower() == "yes":
@@ -100,11 +92,10 @@ def findPrimes():
       else:
         print("I'm assuming no")
         found = 0
+  
 primes = numFromFile()
-
-
 while True:
-  toFactorise = getNum()
+  toFactorise = getNumToFac()
   updates = input("Do you want updates on progress? type yes if you want and anything else if you dont:")
   factors = factorise(toFactorise, updates)
   print(f"The factors of your number are {factors}")
